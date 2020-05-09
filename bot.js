@@ -57,14 +57,14 @@ const weekdays = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag",
 const weekdaysSun = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"]
 
 
-process.on('SIGINT', function () {
-    console.log("Caught interrupt signal");
-    if (untis) { untis.logout().then(process.exit()); }
-    else { process.exit(); }
+process.on('SIGINT', () => {
+    console.log("\nCaught interrupt signal");
+    if (untis) untis.logout().then(process.exit());
+    else process.exit();
 })
 
 // Returns state right now. (In class or not, etc)
-function returnCurrentPeriod (skole, when) {
+const returnCurrentPeriod = (skole, when) => {
     console.log(date.getDay())
     let checkOkt = 0,
         schoolEnd = new UntisDate(timer[skole].timer[timer[skole].timer.length - 1].slutt),
@@ -91,11 +91,9 @@ function returnCurrentPeriod (skole, when) {
     else console.error("could not find time in day");
 }
 
-String.prototype.capitalizeFirstLetter = function () {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-}
+String.prototype.capitalizeFirstLetter = () => this.charAt(0).toUpperCase() + this.slice(1);
 
-function makeTimeplanEmbed(msg) {
+const makeTimeplanEmbed = msg => {
     let timeplanEmbed = new Discord.MessageEmbed()
     let school = msg.channel.name.split("-")[0]
     timeplanEmbed.setDescription(`Timeplan for ${timer[school].fullName}`)
@@ -113,7 +111,7 @@ function makeTimeplanEmbed(msg) {
     return timeplanEmbed
 }
 
-function howLongSinceUntil(sinceUntilThis, stringReturn = false, allowSince = false, fromTime, depth = 2) {
+const howLongSinceUntil = (sinceUntilThis, stringReturn = false, allowSince = false, fromTime, depth = 2) => {
     sinceUntilThis = new UntisDate(sinceUntilThis);
     fromTime = new UntisDate(fromTime);
     let result,
@@ -149,11 +147,9 @@ function howLongSinceUntil(sinceUntilThis, stringReturn = false, allowSince = fa
     } else { return result; }
 }
 
-function getNameByIndex(obj, val) {
-    return Object.keys(obj)[val];
-}
+const getNameByIndex = (obj, val) => Object.keys(obj)[val];
 
-function untisTimeParse(time) {
+const untisTimeParse = (time) => {
     let match = /(\d{1,2})(\d{2})/.exec(time);
     if (match[1].length == 1) { match[1] = "0" + match[1]; }
     return (match[1] + ":" + match[2]);
@@ -162,7 +158,7 @@ function untisTimeParse(time) {
 var lastNoti = {};
 
 //Sjekke etter timer som starter om 5 min
-function intervalFunc() {
+const intervalFunc = () => {
     if (date.getDay() > 0 && date.getDay() < 6) {
         isWeekend = false;
         let totalSchools = Object.keys(timer).length;
@@ -186,7 +182,7 @@ function intervalFunc() {
     } else { isWeekend = true; }
 }
 
-function checkIfSchoolExists(part, school) {
+const checkIfSchoolExists = (part, school) => {
     switch (part) {
         case "timer":
             if (timer[school].timer[0]) { return true; } else { return false; }
@@ -197,7 +193,7 @@ function checkIfSchoolExists(part, school) {
     }
 }
 
-async function findAndSaveClasses(nameKey, school) {
+const findAndSaveClasses = async (nameKey, school) => {
     nameKey = nameKey.toLowerCase();
     if (timer[school].savedClasses[nameKey]) {
         console.log("found saved");
@@ -230,12 +226,12 @@ async function findAndSaveClasses(nameKey, school) {
     }
 }
 
-async function loginSchool(school) {
+const loginSchool = async school => {
     untis = new WebUntisLib.WebUntisAnonymousAuth(school,'romres.ist-asp.com');
     return await untis.login();
 }
 
-function timetableToEmbed(timetable, forClass, givenDate) {
+const timetableToEmbed = (timetable, forClass, givenDate) => {
     if (!timetable[0]) { return new Discord.MessageEmbed().setTitle("Timeplanen er tom! :)").setFooter(`${givenDate.getDate()}.${givenDate.getMonth() + 1}.${givenDate.getFullYear()}`); }
     let timetableSorted = timetable.sort((a, b) => parseFloat(a.startTime) - parseFloat(b.startTime));
     let firstTime = timetableSorted[0].startTime;
@@ -272,11 +268,11 @@ function timetableToEmbed(timetable, forClass, givenDate) {
     return timetableEmbed;
 }
 
-function changeMultipleProps(array, property, value) {
+const changeMultipleProps = (array, property, value) => {
     for (let i in array) { array[i][property] = value; }
 }
 
-async function changeReactable(sentMsg, rClass, dateReacc) {
+const changeReactable = async (sentMsg, rClass, dateReacc) => {
     let chanid = sentMsg.channel.id;
     if (currentReactable[chanid]) { sentMsg.channel.messages.fetch(currentReactable[chanid].msgid).then(gotMessage => gotMessage.delete()) }
     await sentMsg.react('⬅️');
@@ -287,7 +283,7 @@ async function changeReactable(sentMsg, rClass, dateReacc) {
     currentReactable[chanid].dateDisplayed = dateReacc;
 }
 
-Date.prototype.addDays = function (days) {
+Date.prototype.addDays = days => {
     let dodate = new Date(this.valueOf());
     dodate.setDate(date.getDate() + days);
     return dodate;
@@ -316,7 +312,7 @@ const helpEmbed = new Discord.MessageEmbed()
     )
     .setFooter('Hilsen Syver ;)');
 
-var repeatedStrings =
+const repeatedStrings =
 {
     "lastO": "Nå er det siste økt.",
     "afterS": "Skolen en over for idag!",
@@ -325,7 +321,7 @@ var repeatedStrings =
     "weekend": "Nå er det helg. Kos deg!"
 }
 
-function msgNextOkt(msg, skole, when) {
+const msgNextOkt = (msg, skole, when) => {
     when = new UntisDate(when);
     let currentPeriod = returnCurrentPeriod(skole, when.getTimeString());
 
@@ -361,7 +357,7 @@ function msgNextOkt(msg, skole, when) {
     }
 }
 
-function msgCurrentOkt(msg, skole, when) {
+const msgCurrentOkt = (msg, skole, when) => {
     when = new UntisDate(when);
     let currentPeriod = returnCurrentPeriod(skole, when.getTimeString())
     console.log(currentPeriod);
@@ -391,7 +387,7 @@ function msgCurrentOkt(msg, skole, when) {
 
 // ----------------------------------- FUNS FOR COMMANDS
 
-function funSetChannel(msg,args) {
+const funSetChannel = (msg,args) => {
     if (msg.member.roles.cache.some(role => role.name === 'Vaktmester')) {
         console.log(msg.channel.id)
         const setchannel = msg.channel;
@@ -411,7 +407,7 @@ function funSetChannel(msg,args) {
     } else { msg.channel.send("Du har ikke rettigheter nok til å bruke denne kommandoen"); }
 }
 
-function funTime(msg, args) {
+const funTime = (msg, args) => {
     var schoolname = msg.channel.name.split("-")[0];
     if (!args[0] || args[0] === `info`) {
         if (timer[schoolname] && checkIfSchoolExists("timer", schoolname)) { msgCurrentOkt(msg, schoolname); } 
@@ -427,7 +423,7 @@ function funTime(msg, args) {
     } else { msg.reply("Tidspunktet må være i formatet TT:MM."); }
 }
 
-function funKlasse(msg, args) {
+const funKlasse = (msg, args) => {
     var schoolname = msg.channel.name.split("-")[0];
     if (!timer[schoolname].untisName) { msg.channel.send("Denne skolen bruker ikke WebUntis, som er der jeg henter timer fra. De andre kommandoene som ikke innebærer å vise fag vil fortsatt fungere."); }
     else if (args[0]) {
@@ -489,12 +485,12 @@ function funKlasse(msg, args) {
     } else { msg.channel.send("Du må ha med en klasse etter kommandoen for å kunne se informasjon om den."); }
 }
 
-function funTimeplan(msg) {
+const funTimeplan = msg => {
     if (!timer[msg.channel.name.split("-")[0]]) { msg.channel.send("Kanalen du bruker ble ikke gjenkjent."); } 
     else { msg.channel.send(makeTimeplanEmbed(msg)); }
 }
 
-function funMusic(msg,match) {
+const funMusic = (msg, match) => {
     isReady = false;
     var voiceChannel = msg.member.voice.channel;
     let files = fs.readdirSync('./src/');
@@ -568,14 +564,11 @@ client.on('message', msg => {
 var currentReactable = {};
 
 client.on('messageReactionAdd', async (reaction, user) => {
-    // When we receive a reaction we check if the reaction is partial or not
     if (reaction.partial) {
-        // If the message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
         try {
             await reaction.fetch();
         } catch (error) {
             console.log('Something went wrong when fetching the message: ', error);
-            // Return as `reaction.message.author` may be undefined/null
             return;
         }
     }
