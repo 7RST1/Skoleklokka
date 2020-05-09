@@ -66,16 +66,16 @@ process.on('SIGINT', () => {
 // Returns state right now. (In class or not, etc)
 const returnCurrentPeriod = (skole, when) => {
     console.log(date.getDay())
-    let checkOkt = 0,
-        schoolEnd = new UntisDate(timer[skole].timer[timer[skole].timer.length - 1].slutt),
+    let schoolEnd = new UntisDate(timer[skole].timer[timer[skole].timer.length - 1].slutt),
         schoolStart = new UntisDate(timer[skole].timer[0].start);
     when = new UntisDate(when);
     if (date.getDay() == 6 || date.getDay() == 0) { return ["weekend"] } 
     else if (when <= schoolEnd && when >= schoolStart) {
         // tidspunktet er i skoletiden
+        let checkOkt = 0;
         while (timer[skole].timer[checkOkt]) {
-        let oktStart = new UntisDate(timer[skole].timer[checkOkt].start),
-            oktEnd = new UntisDate(timer[skole].timer[checkOkt].slutt);
+            let oktStart = new UntisDate(timer[skole].timer[checkOkt].start),
+                oktEnd = new UntisDate(timer[skole].timer[checkOkt].slutt);
             if (when >= oktStart && when <= oktEnd) {
                 // tidspunktet er inni aktuell time
                 return ["iøkt", timer[skole].timer[checkOkt], checkOkt]
@@ -101,9 +101,7 @@ const makeTimeplanEmbed = msg => {
         let stringsToBeAdded = [`${telleTall[i].capitalizeFirstLetter()} økt:`, `${timer[school].timer[i].start} - ${timer[school].timer[i].slutt}`]
         let currentPeriod = returnCurrentPeriod(school)
         if (currentPeriod[0] === "iøkt" && timer[school].timer[i] === currentPeriod[1]) {
-            stringsToBeAdded.forEach(function (part, index, theArray) {
-                theArray[index] = "**" + part + "**";
-            });
+            stringsToBeAdded.forEach( (part, index, theArray) => { theArray[index] = `**${part}**`; } );
             console.log(stringsToBeAdded)
         }
         timeplanEmbed.addField(stringsToBeAdded[0], stringsToBeAdded[1])
@@ -139,8 +137,7 @@ const howLongSinceUntil = (sinceUntilThis, stringReturn = false, allowSince = fa
                 else { return `om ${timeArray[0]} og ${timeArray[1]}`; }
             }
         } else if (depth === 3) {
-            if (!(timeArray[2] === 1)) { timeArray[2] = timeArray[2] + " sekunder"; }
-            else { timeArray[2] = timeArray[2] + " sekund"; }
+            timeArray[2] = !(timeArray[2] === 1) ? timeArray[2] + " sekunder" : timeArray[2] + " sekund";
             if (result.split(" ")[1] === "siden") { return `for ${timeArray[0]}, ${timeArray[1]} og ${timeArray[2]} siden`; }
             else { return `om ${timeArray[0]}, ${timeArray[1]} og ${timeArray[2]}`; }
         } else { console.error("howLongSinceUntil only takes depth 2 or 3 at the moment!"); }
@@ -151,8 +148,8 @@ const getNameByIndex = (obj, val) => Object.keys(obj)[val];
 
 const untisTimeParse = (time) => {
     let match = /(\d{1,2})(\d{2})/.exec(time);
-    if (match[1].length == 1) { match[1] = "0" + match[1]; }
-    return (match[1] + ":" + match[2]);
+    if (match[1].length == 1) { match[1] = `0${match[1]}`; }
+    return (`${match[1]}:${match[2]}`);
 }
 
 var lastNoti = {};
@@ -164,7 +161,7 @@ const intervalFunc = () => {
         let totalSchools = Object.keys(timer).length;
         console.log(`[${date.getTimeString()}]`);
         for (let skolecount = 0; skolecount < totalSchools; skolecount++) {
-            console.log("--- " + getNameByIndex(timer, skolecount) + " ---");
+            console.log(`--- ${getNameByIndex(timer, skolecount)} ---`);
             for (let i = 0; i < timer[getNameByIndex(timer, skolecount)].timer.length; i++) {
                 // Notify 5-6 min before event
                 let milliCurrentStart = new UntisDate(timer[getNameByIndex(timer, skolecount)].timer[i].start).getDayMilliseconds(),
@@ -252,7 +249,7 @@ const timetableToEmbed = (timetable, forClass, givenDate) => {
     let timetableEmbed = new Discord.MessageEmbed()
         .setColor('#0099ff')
         .setTitle(forClass.longName)
-        .setDescription('Timeplan for klasse ' + forClass.longName + ' på ' + weekdaysSun[givenDate.getDay()]);
+        .setDescription(`Timeplan for klasse ${forClass.longName} på ${weekdaysSun[givenDate.getDay()]}`);
     for (let i in Object.keys(timeArray)) {
         // every period ^
         let fieldsToBeAdded = [];
@@ -262,8 +259,8 @@ const timetableToEmbed = (timetable, forClass, givenDate) => {
             // every subject in same period ^
         }
         untisTimeParse(Object.keys(timeArray)[i]);
-        timetableEmbed.addField("\n" + untisTimeParse(timeArray[Object.keys(timeArray)[i]][0].startTime) + "-" + untisTimeParse(timeArray[Object.keys(timeArray)[i]][0].endTime), fieldsToBeAdded.join('\n'));
-        timetableEmbed.setFooter(`${givenDate.getDate()}.${givenDate.getMonth() + 1}.${givenDate.getFullYear()} - updated ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`);
+        timetableEmbed.addField(`\n${untisTimeParse(timeArray[Object.keys(timeArray)[i]][0].startTime)} - ${untisTimeParse(timeArray[Object.keys(timeArray)[i]][0].endTime)}`, fieldsToBeAdded.join('\n'));
+        timetableEmbed.setFooter(`${givenDate.getDate()}.${givenDate.getMonth() + 1}.${givenDate.getFullYear()} - oppdatert ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`);
     }
     return timetableEmbed;
 }
@@ -446,7 +443,7 @@ const funKlasse = (msg, args) => {
                         console.log(resultClass);
                         loginSchool(timer[schoolname].untisName)
                             .then(() => {
-                                console.log(givenDate + " id: " + resultClass.id);
+                                console.log(`${givenDate} id: ${resultClass.id}`);
                                 return untis.getTimetableFor(givenDate, resultClass.id, WebUntisLib.TYPES.CLASS)
                                     .then(timeTable => {
                                         console.log(timeTable);
